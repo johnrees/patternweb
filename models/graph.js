@@ -19,7 +19,7 @@ const Graph = (name="new graph", _data={}) => {
     return sortedGraph
   }
 
-  const addNode = (id, component, inputs) => {
+  const addNode = (id, component, inputs = {}) => {
     nodes[id] = Node(id, component, inputs)
     _graph[id] = _graph[id] || []
     Object.keys(inputs).forEach(key => {
@@ -49,8 +49,8 @@ const Graph = (name="new graph", _data={}) => {
                 if (typeof node.inputs[key] === "string") {
                   const [sourceNodeId, outport] = _getSourceNode(node.inputs[key])
                   if (!outport) fail("malformed input")
-                  else if (!_data[sourceNodeId]) fail("root key not found")
-                  else if (!_data[sourceNodeId][outport]) fail("sub key not found")
+                  else if (_data[sourceNodeId] === undefined) fail("root key not found")
+                  else if (_data[sourceNodeId][outport] === undefined) fail(`sub key not found (${sourceNodeId}>${outport})`)
                   acc[key] = _data[sourceNodeId][outport]
                 } else {
                   acc[key] = node.inputs[key]
