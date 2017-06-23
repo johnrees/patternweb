@@ -1,4 +1,4 @@
-var Graph = require("./graph")
+const { Graph } = require('./index')
 
 const add = ({X,Y}, cb) => {
   setTimeout(() => cb({ SUM: X + Y }), 0)
@@ -23,5 +23,4 @@ g.add("add3b", add, { X: 'add3>SUM', Y: 2})
 g.add("add4", add, { X: 'add1>SUM', Y: 'split1>OUT2'})
 g.add("add5", add, { X: 'add4>SUM', Y: 10})
 
-g.run()
-
+g.run(graphData => console.log(graphData))

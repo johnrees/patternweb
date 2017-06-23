@@ -1,11 +1,11 @@
 const ASQ = require('asynquence')
-const Node = require('./node')
 const topolysis = require('topolysis')
+const Node = require('./node')
 
 const Graph = (name="new graph", _data={}) => {
 
+  let _graph = {}
   let nodes = {}
-  let graph = {}
 
   const _getSourceNode = str => {
     return str.split(">")
@@ -13,7 +13,7 @@ const Graph = (name="new graph", _data={}) => {
 
   const _sortGraph = () => {
     let sortedGraph = []
-    for (const x of topolysis(graph)) {
+    for (const x of topolysis(_graph)) {
       sortedGraph.unshift(x)
     }
     return sortedGraph
@@ -21,23 +21,23 @@ const Graph = (name="new graph", _data={}) => {
 
   const addNode = (id, component, inputs) => {
     nodes[id] = Node(id, component, inputs)
-    graph[id] = graph[id] || []
+    _graph[id] = _graph[id] || []
     Object.keys(inputs).forEach(key => {
       if (typeof inputs[key] === "string") {
         const [sourceNodeId, outport] = _getSourceNode(inputs[key])
-        graph[sourceNodeId] = graph[sourceNodeId] || []
-        graph[sourceNodeId].push(id)
+        _graph[sourceNodeId] = _graph[sourceNodeId] || []
+        _graph[sourceNodeId].push(id)
       }
     })
   }
 
-  const run = (data=_data) => {
+  const run = (callback=null) => {
     let seq = ASQ()
 
     const steps = _sortGraph()
     steps.forEach(stepNodes => {
 
-      console.log("running in parallel ", stepNodes)
+      // console.log("running in parallel ", stepNodes)
 
       seq.all(
         ...stepNodes.map(id => {
@@ -49,9 +49,9 @@ const Graph = (name="new graph", _data={}) => {
                 if (typeof node.inputs[key] === "string") {
                   const [sourceNodeId, outport] = _getSourceNode(node.inputs[key])
                   if (!outport) fail("malformed input")
-                  else if (!data[sourceNodeId]) fail("root key not found")
-                  else if (!data[sourceNodeId][outport]) fail("sub key not found")
-                  acc[key] = data[sourceNodeId][outport]
+                  else if (!_data[sourceNodeId]) fail("root key not found")
+                  else if (!_data[sourceNodeId][outport]) fail("sub key not found")
+                  acc[key] = _data[sourceNodeId][outport]
                 } else {
                   acc[key] = node.inputs[key]
                 }
@@ -67,18 +67,18 @@ const Graph = (name="new graph", _data={}) => {
       ).val(function(...msgs) {
         msgs.forEach( ([msg, id]) => {
           Object.keys(msg).forEach(key => {
-            data[id] = data[id] || {}
-            data[id][key] = msg[key]
+            _data[id] = _data[id] || {}
+            _data[id][key] = msg[key]
           })
-          console.log(`[${id}] ${JSON.stringify(msg)}`)
+          // console.log(`[${id}] ${JSON.stringify(msg)}`)
         })
       })
 
     })
 
     seq
-      .val(msg => console.info(_data))
-      .or( (err) => console.error(err) )
+      .val(msg => callback ? callback(_data) : _data)
+      .or((err) => console.error(err))
   }
 
   return {
