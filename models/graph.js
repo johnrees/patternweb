@@ -6,6 +6,7 @@ const Graph = (name="new graph", _data={}) => {
 
   let _graph = {}
   let nodes = {}
+  let edges = []
 
   const _getSourceNode = str => {
     return str.split(">")
@@ -27,6 +28,7 @@ const Graph = (name="new graph", _data={}) => {
         const [sourceNodeId, outport] = _getSourceNode(inputs[key])
         _graph[sourceNodeId] = _graph[sourceNodeId] || []
         _graph[sourceNodeId].push(id)
+        edges.push([ inputs[key], `${key}>${id}`])
       }
     })
   }
@@ -58,7 +60,7 @@ const Graph = (name="new graph", _data={}) => {
                 return acc
               }, {})
               const doneWithId = (id) => (output) => done([output, id])
-              node.component(inputs, doneWithId(id))
+              node.component.implementation(inputs, doneWithId(id))
             } catch(e) {
               throw [id,e]
             }
@@ -83,10 +85,12 @@ const Graph = (name="new graph", _data={}) => {
 
   return {
     name,
+    edges,
     nodes,
     addNode,
     add: addNode,
-    run
+    run,
+    _data
   }
 
 }
