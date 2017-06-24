@@ -1,2 +1,2 @@
-const Graph = require("./models/graph")
+const Graph = require("./src/graph")
 module.exports = { Graph }

@@ -1,6 +1,6 @@
 const ASQ = require('asynquence')
 const topolysis = require('topolysis')
-const Node = require('./node')
+const { Node, _isAnAlias, _getSourceNode } = require('./node')
 
 const Graph = (name="new graph", _data={}) => {
 
@@ -8,11 +8,7 @@ const Graph = (name="new graph", _data={}) => {
   let nodes = {}
   let edges = []
 
-  const _getSourceNode = str => {
-    return str.split(">")
-  }
-
-  const _sortGraph = () => {
+  const _sort = () => {
     let sortedGraph = []
     for (const x of topolysis(_graph)) {
       sortedGraph.unshift(x)
@@ -24,7 +20,7 @@ const Graph = (name="new graph", _data={}) => {
     nodes[id] = Node(id, component, inputs)
     _graph[id] = _graph[id] || []
     Object.keys(inputs).forEach(key => {
-      if (typeof inputs[key] === "string") {
+      if (_isAnAlias(inputs[key])) {
         const [sourceNodeId, outport] = _getSourceNode(inputs[key])
         _graph[sourceNodeId] = _graph[sourceNodeId] || []
         _graph[sourceNodeId].push(id)
@@ -36,7 +32,7 @@ const Graph = (name="new graph", _data={}) => {
   const run = (callback=null) => {
     let seq = ASQ()
 
-    const steps = _sortGraph()
+    const steps = _sort()
     steps.forEach(stepNodes => {
 
       // console.log("running in parallel ", stepNodes)
@@ -48,7 +44,7 @@ const Graph = (name="new graph", _data={}) => {
             const fail = message => done.fail([id, message])
             try {
               const inputs = Object.keys(node.inputs).reduce(function(acc, key) {
-                if (typeof node.inputs[key] === "string") {
+                if (_isAnAlias(node.inputs[key])) {
                   const [sourceNodeId, outport] = _getSourceNode(node.inputs[key])
                   if (!outport) fail("malformed input")
                   else if (_data[sourceNodeId] === undefined) fail("root key not found")
