@@ -70,6 +70,10 @@ function Graph() {
   const disconnect = (sourceID, sourceOutport, targetID, targetInport) => {
     const edge = Edge(sourceID, sourceOutport, targetID, targetInport)
     _edges = _edges.delete(edge.id)
+
+    _relationships[sourceID].splice(_relationships[sourceID].indexOf(targetID),1)
+    _DAG = sortDAG(_relationships)
+
     events.emit('disconnect', { sourceID, sourceOutport, targetID, targetInport })
   }
 
