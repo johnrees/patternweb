@@ -47,19 +47,27 @@ it("can disconnect nodes", () => {
   expect( Object.keys(g.edges()) ).toHaveLength(0)
 })
 
-it("can be run", () => {
+it("can be run", done => {
   const g = Graph()
   let obj = {}
+  // const f = ({X, Y}) => { return p }
 
   g.add("nodeA", add, { X: 1, Y: 1})
   g.add("nodeB", add, { X: 'nodeA>SUM', Y: 1})
   g.add("nodeC", add, { X: 'nodeA>SUM', Y: 2})
   g.add("nodeD", add, { X: 'nodeB>SUM', Y: 'nodeC>SUM'})
 
-  expect(g.run(obj)).toEqual({
-    nodeA: { SUM: 2 },
-    nodeB: { SUM: 3 },
-    nodeC: { SUM: 4 },
-    nodeD: { SUM: 7 }
+  // g.events.on('run', function(id) { console.log(id, "RUNNNN")})
+  // g.events.on('error', function(id, error) { console.error(id) })
+
+  g.run(obj, result => {
+    expect(result).toEqual({
+      nodeA: { SUM: 2 },
+      nodeB: { SUM: 3 },
+      nodeC: { SUM: 4 },
+      nodeD: { SUM: 7 }
+    })
+    done()
   })
+
 })

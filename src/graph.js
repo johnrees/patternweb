@@ -14,9 +14,18 @@ function Graph() {
   let _edges = Map()
   const edges = () => _edges.toJS()
 
-  let _DAG = {} // used by topolysis to arrange graph for running
+  let _relationships = {} // used by topolysis to arrange graph for running
+  let _DAG = []
 
   const events = new EventEmitter() // util.inherits(Graph, EventEmitter)
+
+  const sortDAG = relationships => {
+    let _sortedDag = []
+    for (const x of topolysis(relationships)) {
+      _sortedDag.unshift(x)
+    }
+    return _sortedDag
+  }
 
   const find = nodeID => _nodes.get(nodeID)
 
@@ -24,7 +33,10 @@ function Graph() {
     if (_nodes.has(nodeID)) throw "node already exists with that ID"
     const node = new Node(nodeID, component, inputs)
     _nodes = _nodes.set(nodeID, node)
-    _DAG[nodeID] = _DAG[nodeID] || []
+
+    _relationships[nodeID] = _relationships[nodeID] || []
+    _DAG = sortDAG(_relationships)
+
     events.emit('add', { nodeID })
 
     for (const inport of Object.keys(inputs)) {
@@ -37,15 +49,21 @@ function Graph() {
 
   const remove = nodeID => {
     _nodes = _nodes.delete(nodeID)
-    delete _DAG[nodeID]
+
+    delete _relationships[nodeID]
+    _DAG = sortDAG(_relationships)
+
     events.emit('remove', { nodeID })
   }
 
   const connect = (sourceID, sourceOutport, targetID, targetInport) => {
     const edge = Edge(sourceID, sourceOutport, targetID, targetInport)
     _edges = _edges.set(edge.id, true)
-    _DAG[sourceID] = _DAG[sourceID] || []
-    _DAG[sourceID].push(targetID)
+
+    _relationships[sourceID] = _relationships[sourceID] || []
+    _relationships[sourceID].push(targetID)
+    _DAG = sortDAG(_relationships)
+
     events.emit('connect', { sourceID, sourceOutport, targetID, targetInport })
   }
 
@@ -55,23 +73,34 @@ function Graph() {
     events.emit('disconnect', { sourceID, sourceOutport, targetID, targetInport })
   }
 
-  const runEvent = (id) => events.emit('run', id)
+  const doneWithIDAndEvent = (done, id) => (output) => {
+    done([id, output])
+    events.emit('run', id)
+  }
 
-  const run = (store) => {
-    let steps = []
-    for (const x of topolysis(_DAG)) {
-      steps.unshift(x)
-    }
-
-    // const sequence = ASQ()
-
-    steps.forEach(stepNodes => {
-      stepNodes.forEach( node => {
-        store[node] = store[node] || {}
-        store[node] = _nodes.get(node).run(store, runEvent)
+  const run = (store, callback) => {
+    const sequence = ASQ()
+    _DAG.map(stepNodes => {
+      sequence.all(
+        ...stepNodes.map( nodeID => done => {
+          try {
+            return _nodes.get(nodeID).run(store, doneWithIDAndEvent(done, nodeID))
+          } catch(e) {
+            throw [nodeID, e]
+          }
+        })
+      ).val(function(...outputs) {
+        outputs.forEach( ([nodeID, output]) => {
+          Object.keys(output).forEach(key => {
+            store[nodeID] = store[nodeID] || {}
+            store[nodeID][key] = output[key]
+          })
+        })
       })
     })
-    return store
+    sequence
+      .or((id, err) => events.emit('error', id, err))
+      .val(msg => callback ? callback(store) : store)
   }
 
   return {
