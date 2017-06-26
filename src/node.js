@@ -5,14 +5,15 @@ function Node(nodeID, component, inputs) {
 }
 
 Node.prototype.run = function(store, done) {
-  for (const inport of Object.keys(this.inputs)) {
-    if (typeof this.inputs[inport] === "string") {
-      const [sourceNode, sourceOutport] = this.inputs[inport].split(">")
-      this.inputs[inport] = store[sourceNode][sourceOutport]
+  const {inputs} = this
+  for (const inport of Object.keys(inputs)) {
+    if (typeof inputs[inport] === "string" && inputs[inport].indexOf(">") >= 0) {
+      const [sourceNode, sourceOutport] = inputs[inport].split(">")
+      inputs[inport] = store[sourceNode][sourceOutport]
     }
   }
 
-  return this.component(this.inputs, done)
+  return this.component(inputs, done)
 }
 
 module.exports = Node

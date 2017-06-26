@@ -29,7 +29,7 @@ function Graph() {
 
   const find = nodeID => _nodes.get(nodeID)
 
-  const add = (nodeID, component, inputs) => {
+  const add = (nodeID, component, inputs = {}) => {
     if (_nodes.has(nodeID)) throw "node already exists with that ID"
     const node = new Node(nodeID, component, inputs)
     _nodes = _nodes.set(nodeID, node)
@@ -40,7 +40,7 @@ function Graph() {
     events.emit('add', { nodeID })
 
     for (const inport of Object.keys(inputs)) {
-      if (typeof inputs[inport] === "string") {
+      if (typeof inputs[inport] === "string" && inputs[inport].indexOf(">") >= 0) {
         const [sourceID, sourceOutport] = inputs[inport].split(">")
         connect(sourceID, sourceOutport, nodeID, inport)
       }
@@ -77,9 +77,8 @@ function Graph() {
     events.emit('disconnect', { sourceID, sourceOutport, targetID, targetInport })
   }
 
-  const doneWithIDAndEvent = (done, id) => output => {
+  const doneWithID = (done, id) => output => {
     done([id, output])
-    events.emit('run', id)
   }
 
   const run = (store, callback) => {
@@ -88,7 +87,7 @@ function Graph() {
       sequence.all(
         ...stepNodes.map( nodeID => done => {
           try {
-            return _nodes.get(nodeID).run(store, doneWithIDAndEvent(done, nodeID))
+            return _nodes.get(nodeID).run(store, doneWithID(done, nodeID))
           } catch(e) {
             throw [nodeID, e]
           }
@@ -99,6 +98,7 @@ function Graph() {
             store[nodeID] = store[nodeID] || {}
             store[nodeID][key] = output[key]
           })
+          events.emit('run', nodeID)
         })
       })
     })
