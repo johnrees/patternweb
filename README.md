@@ -4,7 +4,7 @@ Note: this is still under development, these docs are likely to be incorrect.
 
 ## Usage
 
-```
+```javascript
 const PW = require('patternweb')
 
 const graph = PW.Graph()
