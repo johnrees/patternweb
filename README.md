@@ -1,6 +1,14 @@
-# PatternWeb
+# PatternWeb
 
 Note: this is still under development, these docs are likely to be incorrect.
+
+## Terminology
+
+A `Graph` is formed of `Nodes`, which are connected by `Edges`.
+
+Outgoing `Edges` are connected from the source `Node's` `Outport` to the target `Node`'s `Inport`.
+
+A `Node` has a `Component`, which is a function that recieves an object, does some work and returns a new object. `Component`s return their object inside a callback-like function.
 
 ## Usage
 
@@ -26,16 +34,20 @@ graph.run({}, function(results) {
 
 ## Events
 
-.on Event Listener
+Graph events are dispatched by the graph.events EventEmitter
 
-`graph.on('connect', function(sourceNodeID, targetNodeID) { console.log(sourceNodeID) })`
+```javascript
+graph.events.on('connect', function(sourceNodeID, targetNodeID) {
+  console.log(sourceNodeID + " connected to " + targetNodeID)
+})
+```
 
 Supported Events
 
-* connect
-* disconnect
 * add
 * remove
+* connect
+* disconnect
 * run
 * start?
 * finish?
