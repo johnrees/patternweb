@@ -1,10 +1,10 @@
-const { Map, List } = require('immutable')
-const util = require('util')
+const { Map } = require('immutable')
 const EventEmitter = require('events')
 const ASQ = require('asynquence')
 const topolysis = require('topolysis')
 const Node = require('./Node')
 const Edge = require('./Edge')
+// const util = require('util')
 
 function Graph() {
 
@@ -77,7 +77,7 @@ function Graph() {
     events.emit('disconnect', { sourceID, sourceOutport, targetID, targetInport })
   }
 
-  const doneWithIDAndEvent = (done, id) => (output) => {
+  const doneWithIDAndEvent = (done, id) => output => {
     done([id, output])
     events.emit('run', id)
   }
