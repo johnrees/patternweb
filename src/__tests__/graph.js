@@ -1,6 +1,12 @@
 const Graph = require("../graph")
 
-const add = ({X, Y}, done) => done({ SUM: X + Y })
+const add = {
+  name: "add",
+  description: "adds values",
+  fn: ({A, B}, done) => done({RESULT: A + B}),
+  inports: ['A', 'B'],
+  outports: ['RESULT']
+}
 
 it("can be created without blowing up", () => expect(new Graph()).toBeTruthy())
 
@@ -48,24 +54,25 @@ it("can disconnect nodes", () => {
 })
 
 it("can be run", done => {
+
   const g = Graph()
   let obj = {}
   // const f = ({X, Y}) => { return p }
 
-  g.add("nodeA", add, { X: 1, Y: 1})
-  g.add("nodeB", add, { X: 'nodeA>SUM', Y: 1})
-  g.add("nodeC", add, { X: 'nodeA>SUM', Y: 2})
-  g.add("nodeD", add, { X: 'nodeB>SUM', Y: 'nodeC>SUM'})
+  g.add("nodeA", add, { A: 1, B: 1})
+  g.add("nodeB", add, { A: 'nodeA>RESULT', B: 1})
+  g.add("nodeC", add, { A: 'nodeA>RESULT', B: 2})
+  g.add("nodeD", add, { A: 'nodeB>RESULT', B: 'nodeC>RESULT'})
 
   // g.events.on('run', function(id) { console.log(id, "RUNNNN")})
   // g.events.on('error', function(id, error) { console.error(id) })
 
   g.run(obj, result => {
     expect(result).toEqual({
-      nodeA: { SUM: 2 },
-      nodeB: { SUM: 3 },
-      nodeC: { SUM: 4 },
-      nodeD: { SUM: 7 }
+      nodeA: { RESULT: 2 },
+      nodeB: { RESULT: 3 },
+      nodeC: { RESULT: 4 },
+      nodeD: { RESULT: 7 }
     })
     done()
   })
