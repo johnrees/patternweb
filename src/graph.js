@@ -2,8 +2,8 @@ const { Map } = require('immutable')
 const EventEmitter = require('events')
 const ASQ = require('asynquence')
 const topolysis = require('topolysis')
-const Node = require('./Node')
-const Edge = require('./Edge')
+const Node = require('./node')
+const Edge = require('./edge')
 // const util = require('util')
 
 function Graph() {
