@@ -4,17 +4,14 @@ function Node(nodeID, component, inputs) {
   this.inputs = inputs
 }
 
-Node.prototype.run = function(store, done) {
-  const {inputs} = this
+Node.prototype.run = function(storeAccessor, done) {
 
-  for (const inport of Object.keys(inputs)) {
-    if (typeof inputs[inport] === "string" && inputs[inport].indexOf(">") >= 0) {
-      const [sourceNode, sourceOutport] = inputs[inport].split(">")
-      inputs[inport] = store[sourceNode][sourceOutport]
-    }
-  }
+  const newInputs = Object.keys(this.inputs).reduce((chain, key) => {
+    chain[key] = storeAccessor(this.inputs[key])
+    return chain
+  }, {})
 
-  return this.component.fn(inputs, done)
+  return this.component.fn(newInputs, done)
 }
 
 module.exports = Node

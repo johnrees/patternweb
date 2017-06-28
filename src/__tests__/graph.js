@@ -59,20 +59,22 @@ it("can be run", done => {
   let obj = {}
   // const f = ({X, Y}) => { return p }
 
-  g.add("nodeA", add, { A: 1, B: 1})
-  g.add("nodeB", add, { A: 'nodeA>RESULT', B: 1})
-  g.add("nodeC", add, { A: 'nodeA>RESULT', B: 2})
-  g.add("nodeD", add, { A: 'nodeB>RESULT', B: 'nodeC>RESULT'})
+  g.add("nodeA", add, { A: 1, B: 1 })
+  g.add("nodeB", add, { A: 'nodeA>RESULT', B: 1 })
+  g.add("nodeC", add, { A: 'nodeA>RESULT', B: 2 })
+  g.add("nodeD", add, { A: 'nodeB>RESULT', B: 'nodeC>RESULT' })
 
-  // g.events.on('run', function(id) { console.log(id, "RUNNNN")})
-  // g.events.on('error', function(id, error) { console.error(id) })
+  g.update("nodeA", { A: 2, B: 1 })
+
+  // // g.events.on('run', function(id) { console.log(id, "RUNNNN")})
+  // // g.events.on('error', function(id, error) { console.error(id) })
 
   g.run(obj, result => {
     expect(result).toEqual({
-      nodeA: { RESULT: 2 },
-      nodeB: { RESULT: 3 },
-      nodeC: { RESULT: 4 },
-      nodeD: { RESULT: 7 }
+      nodeA: { RESULT: 3 },
+      nodeB: { RESULT: 4 },
+      nodeC: { RESULT: 5 },
+      nodeD: { RESULT: 9 }
     })
     done()
   })

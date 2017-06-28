@@ -47,6 +47,13 @@ function Graph() {
     }
   }
 
+  const update = (nodeID, inputs = {}) => {
+    const node = _nodes.get(nodeID, node)
+    const newNode = new Node(nodeID, node.component, inputs)
+    _nodes = _nodes.set(nodeID, newNode)
+    events.emit('update', { nodeID })
+  }
+
   const remove = nodeID => {
     _nodes = _nodes.delete(nodeID)
 
@@ -77,17 +84,24 @@ function Graph() {
     events.emit('disconnect', { sourceID, sourceOutport, targetID, targetInport })
   }
 
-  const doneWithID = (done, id) => output => {
-    done([id, output])
+  const doneWithID = (done, id) => output => done([id, output])
+
+  const getLiveValue = data => keys => {
+    if (typeof keys === "string" && keys.indexOf(">") >= 0) {
+      return keys.split('>').reduce((chain, key) => chain[key], data)
+    } else {
+      return keys
+    }
   }
 
   const run = (store, callback) => {
     const sequence = ASQ()
+    const storeAccessor = getLiveValue(store)
     _DAG.map(stepNodes => {
       sequence.all(
         ...stepNodes.map( nodeID => done => {
           try {
-            return _nodes.get(nodeID).run(store, doneWithID(done, nodeID))
+            return _nodes.get(nodeID).run(storeAccessor, doneWithID(done, nodeID))
           } catch(e) {
             throw [nodeID, e]
           }
@@ -109,6 +123,7 @@ function Graph() {
 
   return {
     add,
+    update,
     find,
     remove,
     connect,
