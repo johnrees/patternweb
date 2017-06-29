@@ -49,8 +49,7 @@ function Graph() {
 
   const update = (nodeID, inputs = {}) => {
     const node = _nodes.get(nodeID, node)
-    const newNode = new Node(nodeID, node.component, inputs)
-    _nodes = _nodes.set(nodeID, newNode)
+    node.inputs = inputs
     events.emit('update', { nodeID })
   }
 
